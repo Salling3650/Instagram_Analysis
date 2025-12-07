@@ -43,9 +43,7 @@ if __name__ == '__main__':
     not_following_back_count = len(not_following_back)
 
     # Display results
-    print("\n" + "="*50)
-    print("INSTAGRAM FOLLOWER ANALYSIS")
-    print("="*50)
+    print("Instagram follower analysis") 
     print(f"\nYou follow: {total_following} accounts")
     print(f"Follow you: {total_followers} accounts")
     print(f"Mutual following: {mutual_following} accounts")
@@ -57,8 +55,8 @@ if __name__ == '__main__':
     # Save results as CSV (keeps terminal output intact)
     with open('not_following_back.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow(['username', 'follows_back'])
+        writer.writerow(['username'])
         for username in sorted(not_following_back):
-            writer.writerow([username, 'no'])
+            writer.writerow([username,])
 
-    print(f"\n{'='*50}\nResults saved to: not_following_back.csv")
+    print(f"\nResults saved to: not_following_back.csv")
