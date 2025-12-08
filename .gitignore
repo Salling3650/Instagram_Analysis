@@ -1,2 +1,4 @@
 data/*
+!data/.gitkeep
 not_following_back.csv
+.DS_Store
