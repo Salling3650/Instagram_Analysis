@@ -1,0 +1,7 @@
+# Ignore List - Add usernames you're okay with following (one per line)
+# Lines starting with # are comments and will be ignored
+
+# Example:
+# username1
+# username2
+# brand_account

@@ -28,5 +28,8 @@ The script will:
 - Display a summary of mutual follows and non-followers
 - Save the results to `not_following_back.csv`
 
+Ignorelist:
+- Alternativly you can add usernames to `ignore_list.txt`
+
 ## Note
 Data files in `data/` and `not_following_back.csv` are ignored by Git for privacy.
