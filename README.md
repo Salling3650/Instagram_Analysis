@@ -4,7 +4,7 @@ This project analyzes Instagram data to find accounts you follow that don't foll
 
 ## Files
 - `instagram_comparison.py`: Python script to analyze followers and following
-- `data/`: Place your Instagram data export files here (`followers_1.html` and `following.html`)
+- `data/`: Place your Instagram data export files here (`followers_1.json` and `following.json`) or (`followers_1.html` and `following.html`)
 - `not_following_back.csv`: Output file with accounts not following you back
 
 ## Setup

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Instagram Follower Analysis - Find accounts not following you back."""
 
-from bs4 import BeautifulSoup
 import csv
+import json
 import os
+from bs4 import BeautifulSoup
 
 
 def load_ignore_list(file_path='ignore_list.txt'):
@@ -18,6 +19,58 @@ def load_ignore_list(file_path='ignore_list.txt'):
             if username and not username.startswith('#'):  # Allow comments
                 ignored.add(username)
     return ignored
+
+
+def extract_usernames_from_json(file_path):
+    """Extract Instagram usernames from JSON file."""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    usernames = set()
+    
+    # Handle Instagram's JSON export format
+    if isinstance(data, dict):
+        # Check for relationships_following or relationships_followers keys
+        if 'relationships_following' in data:
+            for item in data['relationships_following']:
+                if 'title' in item:
+                    usernames.add(item['title'])
+                elif 'string_list_data' in item:
+                    for entry in item['string_list_data']:
+                        if 'value' in entry:
+                            usernames.add(entry['value'])
+        elif 'relationships_followers' in data:
+            for item in data['relationships_followers']:
+                if 'title' in item:
+                    usernames.add(item['title'])
+                elif 'string_list_data' in item:
+                    for entry in item['string_list_data']:
+                        if 'value' in entry:
+                            usernames.add(entry['value'])
+        # Handle simple dict with usernames or data key
+        elif 'usernames' in data:
+            if isinstance(data['usernames'], list):
+                usernames = set(data['usernames'])
+        elif 'data' in data:
+            if isinstance(data['data'], list):
+                usernames = set(data['data'])
+    elif isinstance(data, list):
+        # Handle array format (like followers_1.json)
+        for item in data:
+            if isinstance(item, str):
+                # Simple list of usernames
+                usernames.add(item)
+            elif isinstance(item, dict):
+                # Check for title field
+                if 'title' in item and item['title']:
+                    usernames.add(item['title'])
+                # Check for string_list_data with value field
+                if 'string_list_data' in item:
+                    for entry in item['string_list_data']:
+                        if isinstance(entry, dict) and 'value' in entry:
+                            usernames.add(entry['value'])
+    
+    return usernames
 
 
 def extract_usernames_from_html(file_path):
@@ -46,10 +99,18 @@ def extract_usernames_from_html(file_path):
     return usernames
 
 
+def extract_usernames(file_path):
+    """Extract usernames from either HTML or JSON file based on extension."""
+    if file_path.endswith('.json'):
+        return extract_usernames_from_json(file_path)
+    else:
+        return extract_usernames_from_html(file_path)
+
+
 if __name__ == '__main__':
     # Load and analyze
-    following = extract_usernames_from_html('data/following.html')
-    followers = extract_usernames_from_html('data/followers_1.html')
+    following = extract_usernames('data/following.json')
+    followers = extract_usernames('data/followers_1.json')
     ignored_users = load_ignore_list('ignore_list.txt')
     
     not_following_back = following - followers
