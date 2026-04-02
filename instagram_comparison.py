@@ -7,6 +7,15 @@ import os
 from datetime import datetime
 from bs4 import BeautifulSoup
 
+# Try to use orjson for faster JSON parsing
+try:
+    import orjson
+    def fast_json_load(f):
+        return orjson.loads(f.read())
+except ImportError:
+    def fast_json_load(f):
+        return json.load(f)
+
 
 def load_ignore_list(file_path='ignore_list.txt'):
     """Load usernames from ignore list file (one username per line)."""
@@ -66,7 +75,7 @@ def cleanup_ignore_list(following, file_path='ignore_list.txt'):
 def extract_usernames_from_json(file_path):
     """Extract Instagram usernames from JSON file."""
     with open(file_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        data = fast_json_load(f)
     
     usernames = set()
     
@@ -162,7 +171,7 @@ def parse_likes_data(file_path):
         return {}
     
     with open(file_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        data = fast_json_load(f)
     
     # Flatten structure to get username -> list of timestamps
     likes_by_user = {}
@@ -176,17 +185,25 @@ def parse_likes_data(file_path):
 
 
 def get_follower_since_timestamp(username, followers_data):
-    """Get the timestamp when a user started following (from followers_1.json)."""
+    """Get the timestamp when a user started following.
+    
+    Args:
+        username: The username to search for
+        followers_data: Pre-loaded followers data (dict or list from JSON)
+    
+    Returns:
+        int: Timestamp when they started following, or 0 if not found
+    """
     try:
-        with open(followers_data, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        # Handle both list and dict formats
+        data = followers_data if isinstance(followers_data, list) else followers_data.get('data', [])
         
         for item in data:
             if 'string_list_data' in item:
                 for entry in item['string_list_data']:
                     if entry.get('value') == username:
                         return entry.get('timestamp', 0)
-    except:
+    except (TypeError, KeyError):
         pass
     return 0
 
@@ -201,12 +218,19 @@ def generate_connection_json(followers, following, posts_likes, stories_likes, f
     - Liked per time since followed by: likes per day since following
     - Total score: combined engagement score
     """
+    # Load followers data once for all lookups
+    try:
+        with open(followers_data_path, 'r', encoding='utf-8') as f:
+            followers_data = fast_json_load(f)
+    except:
+        followers_data = []
+    
     connections = []
     current_time = int(datetime.now().timestamp())
     
     for username in followers:
-        # Get follower timestamp
-        followed_since = get_follower_since_timestamp(username, followers_data_path)
+        # Get follower timestamp (now using cached data)
+        followed_since = get_follower_since_timestamp(username, followers_data)
         followed_since_date = datetime.fromtimestamp(followed_since).strftime('%Y-%m-%d %H:%M:%S') if followed_since > 0 else 'Unknown'
         
         # Count likes
